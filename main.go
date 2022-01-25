@@ -18,8 +18,6 @@ import (
 func main() {
 	initConfig()
 
-	log.Debug(viper.GetString("test"))
-
 	p := amplitude.Projects{}
 	err := viper.UnmarshalKey("projects", &p)
 	if err != nil {
@@ -27,11 +25,12 @@ func main() {
 	}
 
 	e := amplitude.New(amplitude.SetProjects(&p))
+	e.StartScrape()
 
 	prometheus.MustRegister(e)
 
 	s := http.Server{
-		Addr:        ":8080",
+		Addr:        viper.GetString("listen"),
 		ReadTimeout: 2 * time.Second,
 	}
 
@@ -41,7 +40,7 @@ func main() {
 	if err != nil {
 		log.Fatal("couldn't start server: ", err)
 	}
-	log.Info("Beginning to serve on port :8080")
+	log.Infof("Beginning to serve on %s", s.Addr)
 }
 
 func initConfig() {
@@ -50,13 +49,17 @@ func initConfig() {
 	viper.AddConfigPath(".")
 	viper.SetConfigType("yaml")
 
+	viper.SetDefault("listen", ":8080")
+
 	viper.SetEnvPrefix("SRE")
 	viper.EnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
 
-	log.SetLevel(log.DebugLevel)
-
 	if err := viper.ReadInConfig(); err == nil {
-		log.Info("Use config file: %s", viper.ConfigFileUsed())
+		log.Info("Use config file: ", viper.ConfigFileUsed())
+	}
+
+	if viper.GetBool("verbose") {
+		log.SetLevel(log.DebugLevel)
 	}
 }
