@@ -104,10 +104,8 @@ func (e *Exporter) StartScrape() {
 	e.timer = time.NewTicker(2 * time.Minute)
 	go func() {
 		for {
-			select {
-			case <-e.timer.C:
-				e.scrape()
-			}
+			<-e.timer.C
+			e.scrape()
 		}
 	}()
 }

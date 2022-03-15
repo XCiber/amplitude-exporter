@@ -26,20 +26,22 @@ type Project struct {
 
 type ChartResponse struct {
 	Data struct {
-		Series [][]struct {
-			SetId string `json:"setId"`
-			Value int    `json:"value"`
+		XValues []string `json:"xValues"`
+		Series  [][]struct {
+			SetId string  `json:"setId"`
+			Value float64 `json:"value"`
 		} `json:"series"`
 		SeriesCollapsed [][]struct {
-			SetId string `json:"setId"`
-			Value int    `json:"value"`
+			SetId string  `json:"setId"`
+			Value float64 `json:"value"`
 		} `json:"seriesCollapsed"`
 		SeriesLabels []int `json:"seriesLabels"`
-		SeriesMeta   []struct {
-			SegmentIndex int `json:"segmentIndex"`
-			EventIndex   int `json:"eventIndex"`
-		} `json:"seriesMeta"`
-		XValues []string `json:"xValues"`
+		//SeriesMeta   []struct {
+		//	SegmentIndex int    `json:"segmentIndex"`
+		//	EventIndex   int    `json:"eventIndex"`
+		//	FormulaIndex int    `json:"formulaIndex"`
+		//	Formula      string `json:"formula"`
+		//} `json:"seriesMeta"`
 	} `json:"data"`
 	TimeComputed                       int64         `json:"timeComputed"`
 	WasCached                          bool          `json:"wasCached"`
