@@ -30,9 +30,13 @@ type MetricInfo struct {
 	key    string
 	acc    float64
 	labels []string
+	mType  prometheus.ValueType
+	lock   sync.RWMutex
 }
 
 func (mi *MetricInfo) Inc(key string, value float64, previousKey string, previousValue float64) {
+	mi.lock.Lock()
+	defer mi.lock.Unlock()
 	if mi.key == key {
 		mi.acc = value
 	} else {
@@ -46,8 +50,24 @@ func (mi *MetricInfo) Inc(key string, value float64, previousKey string, previou
 	}
 }
 
+func (mi *MetricInfo) Set(key string, value float64) {
+	mi.lock.Lock()
+	defer mi.lock.Unlock()
+	mi.key = key
+	mi.value = value
+}
+
 func (mi *MetricInfo) GetValue() float64 {
-	return mi.value + mi.acc
+	mi.lock.RLock()
+	defer mi.lock.RUnlock()
+	switch mi.mType {
+	case prometheus.CounterValue:
+		return mi.value + mi.acc
+	case prometheus.GaugeValue:
+		return mi.value
+	default:
+		return mi.value + mi.acc
+	}
 }
 
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
@@ -65,7 +85,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	for _, metric := range e.metrics {
 		cm, err := prometheus.NewConstMetric(
 			metric.desc,
-			prometheus.CounterValue,
+			metric.mType,
 			metric.GetValue(), metric.labels...)
 		if err != nil {
 			continue
@@ -79,21 +99,35 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 type Option func(e *Exporter)
 
+func newMetric(subsystem string, name string, mType string, help string, labels []string) *MetricInfo {
+	var t prometheus.ValueType
+	switch mType {
+	case "counter":
+		t = prometheus.CounterValue
+	case "gauge":
+		t = prometheus.GaugeValue
+	default:
+		t = prometheus.CounterValue
+	}
+	return &MetricInfo{
+		desc: prometheus.NewDesc(
+			prometheus.BuildFQName(namespace, subsystem, name),
+			help, labels, nil),
+		value:  0,
+		key:    "",
+		acc:    0,
+		labels: labels,
+		mType:  t,
+	}
+}
+
 func SetProjects(p *Projects) Option {
 	return func(e *Exporter) {
 		e.projects = p
 		m := map[string]*MetricInfo{}
 		for _, project := range *p {
 			for _, chart := range project.Charts {
-				m[fmt.Sprintf("%s/%s", project.Name, chart.ID)] = &MetricInfo{
-					desc: prometheus.NewDesc(
-						prometheus.BuildFQName(namespace, chart.Subsystem, chart.Name),
-						chart.HelpString, chart.Labels, nil),
-					value:  0,
-					key:    "",
-					acc:    0,
-					labels: chart.Labels,
-				}
+				m[fmt.Sprintf("%s/%s", project.Name, chart.ID)] = newMetric(chart.Subsystem, chart.Name, chart.Type, chart.HelpString, chart.Labels)
 			}
 		}
 		e.metrics = m
@@ -101,7 +135,7 @@ func SetProjects(p *Projects) Option {
 }
 
 func (e *Exporter) StartScrape() {
-	e.timer = time.NewTicker(2 * time.Minute)
+	e.timer = time.NewTicker(20 * time.Second)
 	go func() {
 		for {
 			<-e.timer.C
@@ -150,16 +184,28 @@ func (e *Exporter) scrape() {
 				continue
 			}
 			if metric, found := e.metrics[fmt.Sprintf("%s/%s", project.Name, chart.ID)]; found {
-				if len(cd.Data.XValues) < 2 || len(cd.Data.Series[0]) < 2 {
-					up = 0
-					continue
+				switch metric.mType {
+				case prometheus.GaugeValue:
+					if len(cd.Data.XValues) < 1 || len(cd.Data.Series[0]) < 1 {
+						up = 0
+						continue
+					}
+					lastKey := cd.Data.XValues[len(cd.Data.XValues)-1]
+					lastValue := cd.Data.Series[0][len(cd.Data.Series[0])-1].Value
+					metric.Set(lastKey, float64(lastValue))
+					log.Debugf("Receive %s[%s]=%f(%f)", metric.desc.String(), lastKey, lastValue, metric.GetValue())
+				default:
+					if len(cd.Data.XValues) < 2 || len(cd.Data.Series[0]) < 2 {
+						up = 0
+						continue
+					}
+					previousKey := cd.Data.XValues[len(cd.Data.XValues)-2]
+					previousValue := cd.Data.Series[0][len(cd.Data.Series[0])-2].Value
+					lastKey := cd.Data.XValues[len(cd.Data.XValues)-1]
+					lastValue := cd.Data.Series[0][len(cd.Data.Series[0])-1].Value
+					metric.Inc(lastKey, float64(lastValue), previousKey, float64(previousValue))
+					log.Debugf("Receive %s[%s]=%f(%f)", metric.desc.String(), lastKey, lastValue, metric.GetValue())
 				}
-				previousKey := cd.Data.XValues[len(cd.Data.XValues)-2]
-				previousValue := cd.Data.Series[0][len(cd.Data.Series[0])-2].Value
-				lastKey := cd.Data.XValues[len(cd.Data.XValues)-1]
-				lastValue := cd.Data.Series[0][len(cd.Data.Series[0])-1].Value
-				metric.Inc(lastKey, float64(lastValue), previousKey, float64(previousValue))
-				log.Debugf("Receive %s[%s]=%d", metric.desc.String(), lastKey, lastValue)
 			}
 		}
 	}
