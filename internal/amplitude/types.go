@@ -5,7 +5,6 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"io"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -15,6 +14,7 @@ type Chart struct {
 	Name       string
 	Subsystem  string
 	HelpString string
+	Type       string
 }
 
 type Project struct {
@@ -80,7 +80,7 @@ func GetChartData(chartId string, client *http.Client, username string, passwd s
 			log.Error("response body close: ", err)
 		}
 	}(res.Body)
-	bodyText, err := ioutil.ReadAll(res.Body)
+	bodyText, err := io.ReadAll(res.Body)
 	if err != nil {
 		return cr, err
 	}

@@ -19,8 +19,9 @@ projects:
       name: error
     - id: <chartId2>
       labels: ["sre"]
-      subsystem: socket2
+      subsystem: zzz
       name: error
+      type: gauge # default is counter
 - name: Project2
   apiId: <amplitude Project 2 api username>
   apiKey: <amplitude Project 2 api password>
