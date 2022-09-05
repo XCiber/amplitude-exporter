@@ -9,5 +9,6 @@ projects:
         name: error
       - id: yyyyyyy
         labels: ["sre"]
-        subsystem: socket2
-        name: error
+        subsystem: zzz
+        name: availability
+        type: gauge # counter by default
