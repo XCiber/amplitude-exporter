@@ -34,7 +34,11 @@ var rootCmd = &cobra.Command{
 			log.Fatal("config error: ", err)
 		}
 
-		e := amplitude.New(amplitude.SetProjects(&p), amplitude.SetHTTPClient(&http.Client{Timeout: time.Duration(timeout) * time.Second}))
+		httpClient := &http.Client{
+			Timeout: time.Duration(timeout) * time.Second,
+		}
+
+		e := amplitude.New(amplitude.SetProjects(&p), amplitude.SetHTTPClient(httpClient))
 
 		r := prometheus.NewRegistry()
 		r.MustRegister(e)

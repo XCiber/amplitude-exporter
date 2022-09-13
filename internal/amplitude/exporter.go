@@ -152,7 +152,6 @@ func SetHTTPClient(client *http.Client) Option {
 
 func New(opts ...Option) *Exporter {
 	e := &Exporter{
-		client: http.DefaultClient,
 		up: prometheus.NewGauge(prometheus.GaugeOpts{
 			Namespace: namespace,
 			Name:      "up",
@@ -167,6 +166,12 @@ func New(opts ...Option) *Exporter {
 
 	for _, opt := range opts {
 		opt(e)
+	}
+
+	if e.client == nil {
+		e.client = &http.Client{
+			Timeout: 10 * time.Second,
+		}
 	}
 
 	return e
