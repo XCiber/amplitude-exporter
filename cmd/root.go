@@ -79,6 +79,7 @@ func initConfig() {
 
 	viper.SetConfigName(cfgFile)
 	viper.AddConfigPath(".")
+	viper.AddConfigPath("/etc/amplitude-exporter/")
 	viper.SetConfigType("yaml")
 
 	if err := viper.ReadInConfig(); err == nil {
