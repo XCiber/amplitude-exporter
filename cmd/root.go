@@ -15,10 +15,11 @@ import (
 )
 
 var (
-	cfgFile = "config"
-	verbose = false
-	listen  = ":8080"
-	timeout = 30
+	cfgFile  = "config"
+	verbose  = false
+	listen   = ":8080"
+	timeout  = time.Second * 30
+	interval = time.Second * 60
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -35,7 +36,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		httpClient := &http.Client{
-			Timeout: time.Duration(timeout) * time.Second,
+			Timeout: timeout,
 		}
 
 		e := amplitude.New(amplitude.SetProjects(&p), amplitude.SetHTTPClient(httpClient))
@@ -44,7 +45,7 @@ var rootCmd = &cobra.Command{
 		r.MustRegister(e)
 		handler := promhttp.HandlerFor(r, promhttp.HandlerOpts{})
 
-		e.StartScrape()
+		e.StartScrape(interval)
 
 		s := http.Server{
 			Addr:        listen,
@@ -72,7 +73,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file name (default is 'config')")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().StringVarP(&listen, "listen", "l", ":8080", "listen address")
-	rootCmd.PersistentFlags().IntVarP(&timeout, "timeout", "t", 30, "timeout for http requests")
+	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", time.Second*30, "timeout for http requests")
+	rootCmd.PersistentFlags().DurationVarP(&interval, "interval", "i", time.Second*60, "interval for scraping")
 }
 
 func initConfig() {
