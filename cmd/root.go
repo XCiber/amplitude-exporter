@@ -70,11 +70,11 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file name (default is 'config')")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	rootCmd.PersistentFlags().StringVarP(&listen, "listen", "l", ":8080", "listen address")
-	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", time.Second*30, "timeout for http requests")
-	rootCmd.PersistentFlags().DurationVarP(&interval, "interval", "i", time.Second*60, "interval for scraping")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", cfgFile, "config file name (default is 'config')")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", verbose, "verbose output")
+	rootCmd.PersistentFlags().StringVarP(&listen, "listen", "l", listen, "listen address")
+	rootCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", timeout, "timeout for http requests")
+	rootCmd.PersistentFlags().DurationVarP(&interval, "interval", "i", interval, "interval for scraping")
 }
 
 func initConfig() {
