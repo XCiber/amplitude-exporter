@@ -14,14 +14,20 @@ projects:
   apiKey: <amplitude Project 1 api password>
   charts:
     - id: <chartId1>
-      labels: ["sre"]
+      labels: ["label1", "label2"]
       subsystem: socket
       name: error
+      tags:
+        tag1: value1
+        tag2: value2
     - id: <chartId2>
-      labels: ["sre"]
+      labels: ["label1", "label2"]
       subsystem: zzz
       name: error
       type: gauge # default is counter
+      tags:
+        tag1: value1
+        tag2: value2
 - name: Project2
   apiId: <amplitude Project 2 api username>
   apiKey: <amplitude Project 2 api password>
@@ -37,10 +43,10 @@ projects:
 amplitude_exporter_scrapes_total 2
 # HELP amplitude_socket2_error 
 # TYPE amplitude_socket2_error gauge
-amplitude_socket2_error{sre="sre"} 2
+amplitude_socket2_error{tag1="value1",tag2="value2"} 2
 # HELP amplitude_socket_error 
 # TYPE amplitude_socket_error gauge
-amplitude_socket_error{sre="sre"} 2
+amplitude_socket_error{tag1="value1",tag2="value2"} 2
 # HELP amplitude_up Was the last scrape of Amplitude successful.
 # TYPE amplitude_up gauge
 amplitude_up 1
