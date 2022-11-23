@@ -4,6 +4,8 @@ Amplitude charts to prometheus exporter PoC. Work in progress…
 
 Exposes amplitude chart data as prometheus metrics at http://localhost:8080/metrics
 
+*Important:* `gauge values 5 minutes late!`
+
 ## Config
 
 ./config.yaml
