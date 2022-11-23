@@ -23,7 +23,6 @@ type Exporter struct {
 	projects     *Projects
 	client       *http.Client
 	metrics      map[string]*MetricInfo
-	timer        *time.Ticker
 }
 
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
@@ -59,10 +58,10 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (e *Exporter) StartScrape(interval time.Duration) {
-	e.timer = time.NewTicker(interval)
+	t := time.NewTicker(interval)
 	go func() {
 		for {
-			<-e.timer.C
+			<-t.C
 			e.scrape()
 		}
 	}()
@@ -100,7 +99,7 @@ func (e *Exporter) scrape() {
 
 				switch metric.mType {
 				case prometheus.GaugeValue:
-					metric.Set(lastKey, lastValue)
+					metric.Set(previousKey, previousValue)
 				default:
 					metric.Add(lastKey, lastValue, previousKey, previousValue)
 				}

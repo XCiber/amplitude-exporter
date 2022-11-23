@@ -26,9 +26,9 @@ func TestExporter(t *testing.T) {
 	log.Infof("Receive previous %s=%f", previousKey, previousValue)
 
 	g := newGauge()
-	g.Set(lastKey, lastValue)
-	require.Equal(t, lastValue, g.GetValue())
-	require.Equal(t, float64(22), g.GetValue())
+	g.Set(previousKey, previousValue)
+	require.Equal(t, previousValue, g.GetValue())
+	require.Equal(t, float64(10), g.GetValue())
 
 	c := newCounter()
 	c.Add(lastKey, lastValue, previousKey, previousValue)

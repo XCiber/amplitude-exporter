@@ -83,7 +83,7 @@ func (mi *MetricInfo) GetPromMetric() (prometheus.Metric, error) {
 		return m, nil
 	}
 
-	t, err := time.Parse("2006-01-02T15:04:05", mi.key)
+	t, err := time.ParseInLocation("2006-01-02T15:04:05", mi.key, time.UTC)
 	if err != nil {
 		return m, err
 	}
