@@ -3,6 +3,7 @@ package amplitude
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"sync"
+	"time"
 )
 
 type MetricInfo struct {
@@ -68,10 +69,24 @@ func (mi *MetricInfo) Reset() {
 	mi.key = ""
 }
 
-func (mi *MetricInfo) GetPromMetric() prometheus.Metric {
-	return prometheus.MustNewConstMetric(
+func (mi *MetricInfo) GetPromMetric() (prometheus.Metric, error) {
+	m, err := prometheus.NewConstMetric(
 		mi.desc,
 		mi.mType,
 		mi.GetValue(),
 		mi.labels...)
+	if err != nil {
+		return m, err
+	}
+
+	if mi.mType != prometheus.GaugeValue {
+		return m, nil
+	}
+
+	t, err := time.Parse("2006-01-02T15:04:05", mi.key)
+	if err != nil {
+		return m, err
+	}
+
+	return prometheus.NewMetricWithTimestamp(t, m), nil
 }

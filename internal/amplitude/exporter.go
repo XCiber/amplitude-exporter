@@ -41,7 +41,17 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	e.totalScrapes.Inc()
 
 	for _, metric := range e.metrics {
-		ch <- metric.GetPromMetric()
+		m, err := metric.GetPromMetric()
+		if m != nil {
+			ch <- m
+			if err != nil {
+				log.Debugf("metric: %v, err: %v", m, err)
+			}
+			continue
+		}
+		if err != nil {
+			log.Errorf("Error getting metric: %v", err)
+		}
 	}
 
 	ch <- e.up
@@ -91,11 +101,10 @@ func (e *Exporter) scrape() {
 				switch metric.mType {
 				case prometheus.GaugeValue:
 					metric.Set(lastKey, lastValue)
-					log.Debugf("Receive %s[%s]=%f(%f)", metric.desc.String(), lastKey, lastValue, metric.GetValue())
 				default:
 					metric.Add(lastKey, lastValue, previousKey, previousValue)
-					log.Debugf("Receive %s[%s]=%f(%f)", metric.desc.String(), lastKey, lastValue, metric.GetValue())
 				}
+				log.Debugf("Receive %s[%s]=%f(%f)", metric.desc.String(), lastKey, lastValue, metric.GetValue())
 			}
 		}
 	}
