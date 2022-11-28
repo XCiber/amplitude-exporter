@@ -4,11 +4,10 @@ projects:
     apiKey: <amplitude project api password>
     charts:
       - id: xxxxxxxx
-        labels: ["sre"]
         subsystem: socket
         name: error
       - id: yyyyyyy
-        labels: ["sre"]
         subsystem: zzz
         name: availability
         type: gauge # counter by default
+        offset: 4 # take last - offset point, 0 by default

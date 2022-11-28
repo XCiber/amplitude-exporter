@@ -10,9 +10,9 @@ type MetricInfo struct {
 	value  float64
 	key    string
 	acc    float64
-	labels []string
 	mType  prometheus.ValueType
 	lock   sync.RWMutex
+	offset int
 }
 
 func (mi *MetricInfo) GetValue() float64 {
@@ -24,6 +24,12 @@ func (mi *MetricInfo) GetValue() float64 {
 	default:
 		return mi.value + mi.acc
 	}
+}
+
+func (mi *MetricInfo) GetKey() string {
+	mi.lock.RLock()
+	defer mi.lock.RUnlock()
+	return mi.key
 }
 
 func (mi *MetricInfo) Add(key string, value float64, previousKey string, previousValue float64) {
@@ -72,20 +78,5 @@ func (mi *MetricInfo) GetPromMetric() (prometheus.Metric, error) {
 	return prometheus.NewConstMetric(
 		mi.desc,
 		mi.mType,
-		mi.GetValue(),
-		mi.labels...)
-	//if err != nil {
-	//	return m, err
-	//}
-	//
-	//if mi.mType != prometheus.GaugeValue {
-	//	return m, nil
-	//}
-	//
-	//t, err := time.ParseInLocation("2006-01-02T15:04:05", mi.key, time.UTC)
-	//if err != nil {
-	//	return m, err
-	//}
-	//
-	//return prometheus.NewMetricWithTimestamp(t, m), nil
+		mi.GetValue())
 }

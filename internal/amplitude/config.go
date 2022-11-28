@@ -11,11 +11,11 @@ import (
 
 type Chart struct {
 	ID         string            `mapstructure:"id"`
-	Labels     []string          `mapstructure:"labels"`
 	Name       string            `mapstructure:"name"`
 	Subsystem  string            `mapstructure:"subsystem"`
 	HelpString string            `mapstructure:"helpString"`
 	Type       string            `mapstructure:"type"`
+	Offset     int               `mapstructure:"offset"`
 	Tags       map[string]string `mapstructure:"tags"`
 }
 
@@ -77,11 +77,11 @@ func (c *Chart) newMetric() *MetricInfo {
 	return &MetricInfo{
 		desc: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, c.Subsystem, c.Name),
-			c.HelpString, c.Labels, c.Tags),
+			c.HelpString, nil, c.Tags),
 		value:  0,
 		key:    "",
 		acc:    0,
-		labels: c.Labels,
 		mType:  t,
+		offset: c.Offset + 1,
 	}
 }

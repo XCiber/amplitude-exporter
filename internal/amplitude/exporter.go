@@ -87,23 +87,27 @@ func (e *Exporter) scrape() {
 				var lastKey, previousKey string
 				var lastValue, previousValue float64
 
-				if len(cd.Data.XValues) > 0 && len(cd.Data.Series[0]) > 0 {
-					lastKey = cd.Data.XValues[len(cd.Data.XValues)-1]
-					lastValue = cd.Data.Series[0][len(cd.Data.Series[0])-1].Value
-				}
-
-				if len(cd.Data.XValues) > 1 && len(cd.Data.Series[0]) > 1 {
-					previousKey = cd.Data.XValues[len(cd.Data.XValues)-2]
-					previousValue = cd.Data.Series[0][len(cd.Data.Series[0])-2].Value
-				}
-
 				switch metric.mType {
 				case prometheus.GaugeValue:
+					if len(cd.Data.XValues) >= metric.offset && len(cd.Data.Series[0]) >= metric.offset {
+						previousKey = cd.Data.XValues[len(cd.Data.XValues)-metric.offset]
+						previousValue = cd.Data.Series[0][len(cd.Data.Series[0])-metric.offset].Value
+					}
 					metric.Set(previousKey, previousValue)
+					log.Debugf("Receive gauge %s[%s]=%f(%f)", metric.desc.String(), previousKey, previousValue, metric.GetValue())
 				default:
+					if len(cd.Data.XValues) > 0 && len(cd.Data.Series[0]) > 0 {
+						lastKey = cd.Data.XValues[len(cd.Data.XValues)-1]
+						lastValue = cd.Data.Series[0][len(cd.Data.Series[0])-1].Value
+					}
+
+					if len(cd.Data.XValues) > 1 && len(cd.Data.Series[0]) > 1 {
+						previousKey = cd.Data.XValues[len(cd.Data.XValues)-2]
+						previousValue = cd.Data.Series[0][len(cd.Data.Series[0])-2].Value
+					}
 					metric.Add(lastKey, lastValue, previousKey, previousValue)
+					log.Debugf("Receive counter %s[%s / %s]=%f / %f (%f)", metric.desc.String(), lastKey, previousKey, lastValue, previousValue, metric.GetValue())
 				}
-				log.Debugf("Receive %s[%s]=%f(%f)", metric.desc.String(), lastKey, lastValue, metric.GetValue())
 			}
 		}
 	}

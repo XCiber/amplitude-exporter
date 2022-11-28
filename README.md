@@ -16,17 +16,16 @@ projects:
   apiKey: <amplitude Project 1 api password>
   charts:
     - id: <chartId1>
-      labels: ["label1", "label2"]
       subsystem: socket
       name: error
       tags:
         tag1: value1
         tag2: value2
     - id: <chartId2>
-      labels: ["label1", "label2"]
       subsystem: zzz
       name: error
       type: gauge # default is counter
+      offset: 5 # take (last - offset) point, only for gauge, default is 0
       tags:
         tag1: value1
         tag2: value2
